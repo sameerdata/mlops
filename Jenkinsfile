@@ -51,13 +51,14 @@ pipeline {
             }
         }
 
-        stage('Upload Model to S3') {
-            steps {
-                sh '''
-                    aws s3 cp model.pkl s3://$BUCKET/models/model.pkl
-                '''
-            }
-        }
+stage('Upload Model to S3') {
+    steps {
+        sh '''
+            aws s3 cp model.tar.gz s3://$BUCKET/models/model.tar.gz
+        '''
+    }
+}
+
          stage('Deploy to SageMaker') {
             steps {
                 sh '''
