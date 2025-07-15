@@ -7,35 +7,28 @@ import joblib
 import tarfile
 
 # 1. Load Dataset
-print("📥 Loading dataset...")
 df = pd.read_csv("dataset.csv")
-
-# 2. Preprocessing
-print("🧹 Preprocessing...")
 df.drop("CustomerID", axis=1, inplace=True)
-df["Gender"] = LabelEncoder().fit_transform(df["Gender"])  # Male=1, Female=0
+df["Gender"] = LabelEncoder().fit_transform(df["Gender"])
 
 X = df.drop("Churn", axis=1)
 y = df["Churn"]
 
-# 3. Train/Test Split
+# 2. Train/Test Split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# 4. Model Training
-print("🧠 Training model...")
+# 3. Train Model
 model = RandomForestClassifier(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 
-# 5. Evaluation
-print("📊 Classification Report:")
-print(classification_report(y_test, model.predict(X_test)))
+# 4. Evaluate
+print("Classification Report:\n", classification_report(y_test, model.predict(X_test)))
 
-# 6. Save Model (SageMaker expects 'sklearn_model.pkl')
+# 5. Save as required file name
 joblib.dump(model, "sklearn_model.pkl")
-print("✅ Model saved as sklearn_model.pkl")
 
-# 7. Package Model as model.tar.gz for SageMaker
+# 6. Package to model.tar.gz
 with tarfile.open("model.tar.gz", "w:gz") as tar:
     tar.add("sklearn_model.pkl", arcname="sklearn_model.pkl")
 
-print("📦 Packaged model as model.tar.gz (SageMaker compatible)")
+print("✅ Model packaged as model.tar.gz")
