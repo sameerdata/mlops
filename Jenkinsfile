@@ -30,9 +30,7 @@ pipeline {
             steps {
                 sh '''
                     python3 -m venv venv
-                    source venv/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
+                    bash -c "source venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt"
                 '''
             }
         }
@@ -48,8 +46,7 @@ pipeline {
         stage('Train Model') {
             steps {
                 sh '''
-                    source venv/bin/activate
-                    python3 train.py
+                    bash -c "source venv/bin/activate && python3 train.py"
                 '''
             }
         }
