@@ -30,11 +30,12 @@ model.fit(X_train, y_train)
 print("📊 Classification Report:")
 print(classification_report(y_test, model.predict(X_test)))
 
-# 6. Save Model as .pkl
-joblib.dump(model, "model.pkl")
-print("✅ Model saved as model.pkl")
+# 6. Save Model (SageMaker expects 'sklearn_model.pkl')
+joblib.dump(model, "sklearn_model.pkl")
+print("✅ Model saved as sklearn_model.pkl")
 
-# 7. Package as .tar.gz for SageMaker
+# 7. Package Model as model.tar.gz for SageMaker
 with tarfile.open("model.tar.gz", "w:gz") as tar:
-    tar.add("model.pkl", arcname="model.pkl")
+    tar.add("sklearn_model.pkl", arcname="sklearn_model.pkl")
+
 print("📦 Packaged model as model.tar.gz (SageMaker compatible)")
