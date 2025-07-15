@@ -58,6 +58,15 @@ pipeline {
                 '''
             }
         }
+         stage('Deploy to SageMaker') {
+            steps {
+                sh '''
+                    bash -c "source venv/bin/activate && python3 deploy_to_sagemaker.py"
+                '''
+            }
+        }
+
+
     }
 
     post {
