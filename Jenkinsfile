@@ -54,6 +54,10 @@ pipeline {
 stage('Upload Model to S3') {
     steps {
         sh '''
+            echo "📦 Verifying archive contents..."
+            tar -tvf model.tar.gz
+
+            echo "⬆️ Uploading model.tar.gz to S3..."
             aws s3 cp model.tar.gz s3://$BUCKET/models/model.tar.gz
         '''
     }
