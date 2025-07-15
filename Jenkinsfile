@@ -7,48 +7,65 @@ pipeline {
         string(name: 'AWS_REGION', defaultValue: 'us-east-1', description: 'AWS region')
         string(name: 'DATASET_S3_BUCKET', defaultValue: 'mlops-project-datas', description: 'S3 bucket name')
         string(name: 'DATA_FILE', defaultValue: 'customer_churn_100.csv', description: 'CSV dataset filename')
-        string(name: 'SAGEMAKER_ROLE', defaultValue: 'arn:aws:iam::981986258943:role/SageMakerExecutionRole', description: 'SageMaker execution role ARN')
+        string(name: 'SAGEMAKER_ROLE', description: 'SageMaker execution role ARN (optional)')
     }
 
     environment {
-        AWS_ACCESS_KEY_ID     = "${params.AWS_ACCESS_KEY_ID}"
+        AWS_ACCESS_KEY_ID = "${params.AWS_ACCESS_KEY_ID}"
         AWS_SECRET_ACCESS_KEY = "${params.AWS_SECRET_ACCESS_KEY}"
-        AWS_DEFAULT_REGION    = "${params.AWS_REGION}"
+        AWS_DEFAULT_REGION = "${params.AWS_REGION}"
+        BUCKET = "${params.DATASET_S3_BUCKET}"
+        DATA_FILE = "${params.DATA_FILE}"
+        SAGEMAKER_ROLE = "${params.SAGEMAKER_ROLE}"
     }
 
     stages {
-        stage('Install dependencies') {
+        stage('Clone Repository') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Set up Python Environment') {
             steps {
                 sh '''
                     python3 -m venv venv
-                    . venv/bin/activate
+                    source venv/bin/activate
                     pip install --upgrade pip
                     pip install -r requirements.txt
                 '''
             }
         }
 
-        stage('Run pipeline script') {
+        stage('Download Dataset from S3') {
             steps {
                 sh '''
-                    . venv/bin/activate
-                    python pipeline.py \
-                        --bucket ${DATASET_S3_BUCKET} \
-                        --data_file ${DATA_FILE} \
-                        --region ${AWS_REGION} \
-                        --role ${SAGEMAKER_ROLE}
+                    aws s3 cp s3://$BUCKET/$DATA_FILE dataset.csv
+                '''
+            }
+        }
+
+        stage('Train Model') {
+            steps {
+                sh '''
+                    source venv/bin/activate
+                    python3 train.py
+                '''
+            }
+        }
+
+        stage('Upload Model to S3') {
+            steps {
+                sh '''
+                    aws s3 cp model.pkl s3://$BUCKET/models/model.pkl
                 '''
             }
         }
     }
 
     post {
-        success {
-            echo '✅ SageMaker pipeline executed successfully.'
-        }
-        failure {
-            echo '❌ Pipeline execution failed. Check logs for details.'
+        always {
+            echo '🚀 Pipeline completed.'
         }
     }
 }
-
