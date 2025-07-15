@@ -41,6 +41,6 @@ if os.path.exists(archive_path):
 print("📦 Packaging model and inference.py as 'serve'...")
 with tarfile.open(archive_path, "w:gz") as tar:
     tar.add(model_filename, arcname="sklearn_model.pkl")
-    tar.add("inference.py", arcname="serve")  # ✅ renamed for SageMaker default behavior
+    tar.add("inference.py", arcname="inference.py")  # ✅ renamed for SageMaker default behavior
 
 print("✅ model.tar.gz ready for SageMaker deployment.")
