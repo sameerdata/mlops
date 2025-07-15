@@ -17,10 +17,7 @@ s3_path = f"s3://{bucket}/models/{model_file}"
 # SageMaker built-in Scikit-learn container (compatible with inference.py)
 container = {
     'Image': '683313688378.dkr.ecr.us-east-1.amazonaws.com/sagemaker-scikit-learn:0.20.0-cpu-py3',
-    'ModelDataUrl': s3_path,
-    'Environment': {
-        'SAGEMAKER_PROGRAM': 'inference.py'
-    }
+    'ModelDataUrl': s3_path
 }
 
 # Initialize client
