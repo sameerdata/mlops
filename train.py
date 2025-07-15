@@ -23,24 +23,24 @@ print("🧠 Training model...")
 model = RandomForestClassifier(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 
-# 4. Evaluate
+# 4. Evaluate model
 print("📊 Classification Report:")
 print(classification_report(y_test, model.predict(X_test)))
 
-# 5. Save model as required by SageMaker
+# 5. Save model for SageMaker
 model_filename = "sklearn_model.pkl"
 joblib.dump(model, model_filename)
 print(f"✅ Model saved as {model_filename}")
 
-# 6. Remove old archive if exists
+# 6. Remove old archive if it exists
 archive_path = "model.tar.gz"
 if os.path.exists(archive_path):
     os.remove(archive_path)
 
-# 7. Package model and inference script into model.tar.gz
-print("📦 Packaging model and inference.py as 'serve'...")
+# 7. Create model.tar.gz with required structure
+print("📦 Packaging model and inference script...")
 with tarfile.open(archive_path, "w:gz") as tar:
-    tar.add(model_filename, arcname="sklearn_model.pkl")
-    tar.add("inference.py", arcname="inference.py")  # ✅ renamed for SageMaker default behavior
+    tar.add(model_filename, arcname="sklearn_model.pkl")         # model at root
+    tar.add("inference.py", arcname="code/inference.py")         # inference script inside code/
 
-print("✅ model.tar.gz ready for SageMaker deployment.")
+print("✅ model.tar.gz is ready for SageMaker deployment.")
