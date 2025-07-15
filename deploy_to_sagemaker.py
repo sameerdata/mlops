@@ -4,7 +4,7 @@ import os
 
 # Load environment variables from Jenkins
 bucket = os.environ['BUCKET']
-model_file = 'model.pkl'
+model_file = 'model.tar.gz'
 model_name = f"mlops-model-{int(time.time())}"
 endpoint_config_name = f"{model_name}-config"
 endpoint_name = f"{model_name}-endpoint"
