@@ -41,6 +41,6 @@ if os.path.exists(archive_path):
 print("📦 Creating SageMaker-compliant model archive...")
 with tarfile.open(archive_path, "w:gz") as tar:
     tar.add(model_filename, arcname="sklearn_model.pkl")         # model at root
-    tar.add("inference.py", arcname="code/inference.py")         # inference script must be inside 'code/' directory
+    tar.add("inference.py", arcname="inference.py")       # ✅        # inference script must be inside 'code/' directory
 
 print("✅ model.tar.gz is ready for SageMaker deployment.")
