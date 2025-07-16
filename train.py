@@ -42,5 +42,6 @@ print("📦 Packaging model and inference script...")
 with tarfile.open(archive_path, "w:gz") as tar:
     tar.add(model_filename, arcname="sklearn_model.pkl")
     tar.add("inference.py", arcname="inference.py")  # <== NOTE: no code/ prefix
-
+    tar.add("requirements.txt", arcname="requirements.txt")
+    
 print("✅ model.tar.gz is ready for SageMaker deployment.")
