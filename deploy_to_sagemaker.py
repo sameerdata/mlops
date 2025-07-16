@@ -19,7 +19,6 @@ container = {
     'Image': '683313688378.dkr.ecr.us-east-1.amazonaws.com/sagemaker-scikit-learn:1.2-1-cpu-py3',
     'ModelDataUrl': s3_path,
     'Environment': {
-        'SAGEMAKER_PROGRAM': 'code/inference.py',
         'SAGEMAKER_SUBMIT_DIRECTORY': s3_path
     }
 }
