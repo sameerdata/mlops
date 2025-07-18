@@ -4,4 +4,6 @@ sagemaker
 scikit-learn==1.2.2
 joblib
 azureml-core
-azureml-dataset-runtime
+azureml-dataset-runtime==1.60.0
+azureml-dataprep[fuse,pandas]>=4.14.0
+pyarrow>=10.0.1
