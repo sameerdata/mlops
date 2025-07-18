@@ -1,31 +1,22 @@
-import argparse
-from azureml.core import Workspace, Datastore, Dataset
+from azureml.core import Workspace, Dataset
+import os
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--resource_group", type=str, required=True)
-parser.add_argument("--workspace_name", type=str, required=True)
-parser.add_argument("--region", type=str, required=True)
-parser.add_argument("--dataset", type=str, required=True)
+# Get workspace from config or environment
+ws = Workspace.from_config()  # assumes config.json OR use arguments if dynamic
 
-args = parser.parse_args()
+# Dataset path
+data_path = os.path.join("dataset", "customer_churn_100.csv")
 
-ws = Workspace.get(
-    name=args.workspace_name,
-    resource_group=args.resource_group,
-)
-
+# Upload as dataset
 datastore = ws.get_default_datastore()
+datastore.upload_files(files=[data_path],
+                       target_path='datasets/',
+                       overwrite=True)
 
-# Upload dataset to datastore
-datastore.upload(
-    src_dir='dataset',
-    target_path='datasets/',
-    overwrite=True,
-    show_progress=True
-)
-
-# Register as tabular dataset
-dataset = Dataset.Tabular.from_delimited_files(path=(datastore, f'datasets/{args.dataset}'))
-dataset = dataset.register(workspace=ws, name='customer_churn_data', create_new_version=True)
+# Register dataset
+dataset = Dataset.Tabular.from_delimited_files(path=(datastore, 'datasets/customer_churn_100.csv'))
+dataset = dataset.register(workspace=ws,
+                           name='customer_churn_dataset',
+                           create_new_version=True)
 
 print("✅ Dataset uploaded and registered.")
