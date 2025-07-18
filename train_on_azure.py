@@ -1,33 +1,34 @@
-import argparse
-from azureml.core import Workspace, Experiment, ScriptRunConfig, Environment
+from azureml.core import Workspace, Experiment, ScriptRunConfig, Environment, Dataset
+from azureml.core.compute import ComputeTarget, AmlCompute
+import os
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--resource_group", type=str, required=True)
-parser.add_argument("--workspace_name", type=str, required=True)
-parser.add_argument("--region", type=str, required=True)
+# Load workspace
+ws = Workspace.from_config()
 
-args = parser.parse_args()
+# Load dataset
+dataset = Dataset.get_by_name(ws, 'customer_churn_dataset')
 
-ws = Workspace.get(
-    name=args.workspace_name,
-    resource_group=args.resource_group,
-)
+# Create/attach compute cluster
+cluster_name = "cpu-cluster"
+if cluster_name in ws.compute_targets:
+    compute_target = ws.compute_targets[cluster_name]
+else:
+    compute_config = AmlCompute.provisioning_configuration(vm_size='STANDARD_DS11_V2',
+                                                           max_nodes=2)
+    compute_target = ComputeTarget.create(ws, cluster_name, compute_config)
+    compute_target.wait_for_completion(show_output=True)
 
-# Set up Azure ML environment
-env = Environment.from_conda_specification(
-    name="sklearn-env",
-    file_path="conda.yml"  # You can also inline the packages
-)
+# Define environment
+env = Environment.from_pip_requirements(name='ml-env', file_path='requirements.txt')
 
-# Create script config (assumes train.py exists)
-src = ScriptRunConfig(
-    source_directory='.',
-    script='train.py',
-    arguments=[],
-    environment=env,
-    compute_target="cpu-cluster"  # Assumes you've already created a cluster
-)
+# Script run config
+src = ScriptRunConfig(source_directory='.',
+                      script='train.py',
+                      arguments=[],
+                      compute_target=compute_target,
+                      environment=env)
 
-exp = Experiment(workspace=ws, name="churn-training")
-run = exp.submit(config=src)
+# Submit experiment
+experiment = Experiment(workspace=ws, name='churn-training')
+run = experiment.submit(src)
 run.wait_for_completion(show_output=True)
