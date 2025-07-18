@@ -1,20 +1,39 @@
 # Ignore virtual environments
 venv/
 .env/
-__pycache__/
-
-# Ignore Git
-.git/
-.gitignore
-
-# Ignore logs
-*.log
 
 # Ignore model artifacts
 *.tar.gz
 *.pkl
 *.joblib
 
-# Ignore compiled files
+# Ignore system/hidden/temp files
+.DS_Store
+*.log
+*.tmp
+*.swp
+
+# Ignore IDE/editor folders
+.idea/
+.vscode/
+*.iml
+
+# Ignore datasets
+dataset/
+datasets/
+*.csv
+*.xlsx
+
+# Ignore version control metadata
+.git/
+.gitignore
+
+# Ignore Python cache
+__pycache__/
 *.pyc
-*.ipynb_checkpoints
+*.pyo
+*.pyd
+
+# Ignore notebooks
+*.ipynb
+.ipynb_checkpoints/
