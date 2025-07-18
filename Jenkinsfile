@@ -19,7 +19,7 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh '''
+                sh '''#!/bin/bash
                     python3 -m venv venv
                     source venv/bin/activate
                     pip install --upgrade pip
@@ -30,12 +30,12 @@ pipeline {
 
         stage('Login to Azure') {
             steps {
-                sh '''
-                    az login --service-principal \
-                      --username "$AZURE_CLIENT_ID" \
-                      --password "$AZURE_CLIENT_SECRET" \
+                sh '''#!/bin/bash
+                    az login --service-principal \\
+                      --username "$AZURE_CLIENT_ID" \\
+                      --password "$AZURE_CLIENT_SECRET" \\
                       --tenant "$AZURE_TENANT_ID"
-                      
+
                     az account set --subscription "$AZURE_SUBSCRIPTION_ID"
                 '''
             }
@@ -43,7 +43,7 @@ pipeline {
 
         stage('Upload Dataset to Azure') {
             steps {
-                sh '''
+                sh '''#!/bin/bash
                     source venv/bin/activate
                     python upload_dataset.py
                 '''
@@ -52,7 +52,7 @@ pipeline {
 
         stage('Train Model on Azure') {
             steps {
-                sh '''
+                sh '''#!/bin/bash
                     source venv/bin/activate
                     python train_on_azure.py
                 '''
