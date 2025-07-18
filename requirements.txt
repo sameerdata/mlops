@@ -4,3 +4,4 @@ sagemaker
 scikit-learn==1.2.2
 joblib
 azureml-core
+azureml-dataset-runtime
