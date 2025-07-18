@@ -1,61 +1,93 @@
 pipeline {
     agent any
 
+    parameters {
+        string(name: 'AZURE_CLIENT_ID', description: 'Azure Service Principal Client ID')
+        string(name: 'AZURE_CLIENT_SECRET', description: 'Azure Service Principal Client Secret')
+        string(name: 'AZURE_TENANT_ID', description: 'Azure Tenant ID')
+        string(name: 'AZURE_SUBSCRIPTION_ID', description: 'Azure Subscription ID')
+        string(name: 'AZURE_RESOURCE_GROUP', defaultValue: 'mlops-rg', description: 'Resource Group Name')
+        string(name: 'AZURE_WORKSPACE_NAME', defaultValue: 'mlops-workspace', description: 'Azure ML Workspace Name')
+        string(name: 'AZURE_REGION', defaultValue: 'eastus', description: 'Azure Region')
+        string(name: 'DATA_FILE', defaultValue: 'customer_churn_100.csv', description: 'Dataset CSV File')
+    }
+
     environment {
-        AZ_CRED = credentials('AZURE_CREDENTIALS') // from Jenkins secrets
-        AZ_SUBSCRIPTION_ID = 'your-subscription-id'
-        AZ_RG = 'mlops-rg'
-        AZ_WS = 'mlops-workspace'
+        AZURE_CLIENT_ID       = "${params.AZURE_CLIENT_ID}"
+        AZURE_CLIENT_SECRET   = "${params.AZURE_CLIENT_SECRET}"
+        AZURE_TENANT_ID       = "${params.AZURE_TENANT_ID}"
+        AZURE_SUBSCRIPTION_ID = "${params.AZURE_SUBSCRIPTION_ID}"
+        AZURE_RESOURCE_GROUP  = "${params.AZURE_RESOURCE_GROUP}"
+        AZURE_WORKSPACE_NAME  = "${params.AZURE_WORKSPACE_NAME}"
+        AZURE_REGION          = "${params.AZURE_REGION}"
+        DATA_FILE             = "${params.DATA_FILE}"
     }
 
     stages {
+
         stage('Checkout Code') {
             steps {
-                git 'https://github.com/your-username/azure-mlops-project.git'
+                checkout scm
             }
         }
 
-        stage('Azure Login') {
+        stage('Set Up Python Environment') {
             steps {
                 sh '''
-                    echo $AZ_CRED > azcreds.json
-                    az login --service-principal -u $(jq -r .clientId azcreds.json) \
-                        -p $(jq -r .clientSecret azcreds.json) \
-                        --tenant $(jq -r .tenantId azcreds.json)
-                    az account set --subscription $AZ_SUBSCRIPTION_ID
+                    python3 -m venv venv
+                    source venv/bin/activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
                 '''
             }
         }
 
-        stage('Upload Dataset') {
+        stage('Login to Azure') {
             steps {
                 sh '''
-                    az storage blob upload-batch \
-                      --account-name mlopsstorageaccount \
-                      --destination datasets \
-                      --source dataset/
+                    az login --service-principal \
+                      --username $AZURE_CLIENT_ID \
+                      --password $AZURE_CLIENT_SECRET \
+                      --tenant $AZURE_TENANT_ID
+
+                    az account set --subscription $AZURE_SUBSCRIPTION_ID
                 '''
             }
         }
 
-        stage('Submit Azure ML Training') {
+        stage('Upload Dataset to Azure ML') {
             steps {
                 sh '''
-                    az ml job create --file azureml/job.yml \
-                        --resource-group $AZ_RG \
-                        --workspace-name $AZ_WS
+                    echo "Uploading dataset to Azure ML default datastore..."
+
+                    source venv/bin/activate
+                    python3 upload_dataset.py \
+                      --resource_group $AZURE_RESOURCE_GROUP \
+                      --workspace_name $AZURE_WORKSPACE_NAME \
+                      --region $AZURE_REGION \
+                      --dataset $DATA_FILE
                 '''
             }
         }
 
-        stage('Deploy Model') {
+        stage('Train Model on Azure ML') {
             steps {
                 sh '''
-                    az ml online-endpoint create --name churn-endpoint --file azureml/deploy.yml \
-                        --resource-group $AZ_RG \
-                        --workspace-name $AZ_WS
+                    echo "Submitting training job to Azure ML..."
+
+                    source venv/bin/activate
+                    python3 train_on_azure.py \
+                      --resource_group $AZURE_RESOURCE_GROUP \
+                      --workspace_name $AZURE_WORKSPACE_NAME \
+                      --region $AZURE_REGION
                 '''
             }
+        }
+    }
+
+    post {
+        always {
+            echo '✅ Jenkins pipeline execution complete.'
         }
     }
 }
