@@ -22,7 +22,7 @@ else:
 env = Environment.from_pip_requirements(name='ml-env', file_path='src/requirements.txt')
 
 # Script run config
-src = ScriptRunConfig(source_directory='.',
+src = ScriptRunConfig(
                       source_directory='src',
                       script='train.py',
                       arguments=[],
