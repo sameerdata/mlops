@@ -2,70 +2,60 @@ pipeline {
     agent any
 
     environment {
-        AZURE_SUBSCRIPTION_ID = credentials('AZ_SUBSCRIPTION_ID')
-        AZURE_CLIENT_ID = credentials('AZ_CLIENT_ID')
-        AZURE_CLIENT_SECRET = credentials('AZ_CLIENT_SECRET')
-        AZURE_TENANT_ID = credentials('AZ_TENANT_ID')
+        AZ_CRED = credentials('AZURE_CREDENTIALS') // from Jenkins secrets
+        AZ_SUBSCRIPTION_ID = 'your-subscription-id'
+        AZ_RG = 'mlops-rg'
+        AZ_WS = 'mlops-workspace'
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                checkout scm
+                git 'https://github.com/your-username/azure-mlops-project.git'
             }
         }
 
-        stage('Setup Env') {
+        stage('Azure Login') {
             steps {
                 sh '''
-                    python3 -m venv venv
-                    source venv/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
+                    echo $AZ_CRED > azcreds.json
+                    az login --service-principal -u $(jq -r .clientId azcreds.json) \
+                        -p $(jq -r .clientSecret azcreds.json) \
+                        --tenant $(jq -r .tenantId azcreds.json)
+                    az account set --subscription $AZ_SUBSCRIPTION_ID
                 '''
             }
         }
 
-        stage('Login to Azure') {
+        stage('Upload Dataset') {
             steps {
                 sh '''
-                    az login --service-principal \
-                      -u $AZURE_CLIENT_ID \
-                      -p $AZURE_CLIENT_SECRET \
-                      --tenant $AZURE_TENANT_ID
-                    az account set --subscription $AZURE_SUBSCRIPTION_ID
+                    az storage blob upload-batch \
+                      --account-name mlopsstorageaccount \
+                      --destination datasets \
+                      --source dataset/
                 '''
             }
         }
 
-        stage('Submit Azure ML Job') {
+        stage('Submit Azure ML Training') {
             steps {
                 sh '''
-                    az ml job create --file azure-job.yml
+                    az ml job create --file azureml/job.yml \
+                        --resource-group $AZ_RG \
+                        --workspace-name $AZ_WS
                 '''
             }
         }
 
-        stage('Register Model (Optional)') {
+        stage('Deploy Model') {
             steps {
                 sh '''
-                    az ml model create --name churn-model --path outputs/sklearn_model.pkl
+                    az ml online-endpoint create --name churn-endpoint --file azureml/deploy.yml \
+                        --resource-group $AZ_RG \
+                        --workspace-name $AZ_WS
                 '''
             }
-        }
-
-        stage('Deploy Endpoint') {
-            steps {
-                sh '''
-                    az ml online-endpoint create --file endpoint.yml
-                '''
-            }
-        }
-    }
-
-    post {
-        always {
-            echo '✅ Azure ML Pipeline Completed!'
         }
     }
 }
