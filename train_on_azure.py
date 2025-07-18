@@ -19,10 +19,11 @@ else:
     compute_target.wait_for_completion(show_output=True)
 
 # Define environment
-env = Environment.from_pip_requirements(name='ml-env', file_path='requirements.txt')
+env = Environment.from_pip_requirements(name='ml-env', file_path='src/requirements.txt')
 
 # Script run config
 src = ScriptRunConfig(source_directory='.',
+                      source_directory='src',
                       script='train.py',
                       arguments=[],
                       compute_target=compute_target,
