@@ -1,39 +1,40 @@
-from azureml.core import Workspace, Dataset
+import argparse
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 import joblib
-import os
 
-# 1. Load dataset from Azure ML workspace
-print("📥 Loading dataset from Azure ML...")
-ws = Workspace.from_config()
-dataset = Dataset.get_by_name(ws, 'customer_churn_dataset')
-df = dataset.to_pandas_dataframe()
+# Parse arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('--data_path', type=str, required=True, help='Path to input CSV file')
+args = parser.parse_args()
 
-# 2. Preprocess
+# Load dataset
+print(f"📥 Loading dataset from {args.data_path}...")
+df = pd.read_csv(args.data_path)
+
+# Preprocess
 print("🔧 Preprocessing dataset...")
 df.drop("CustomerID", axis=1, inplace=True)
 df["Gender"] = LabelEncoder().fit_transform(df["Gender"])
 X = df.drop("Churn", axis=1)
 y = df["Churn"]
 
-# 3. Train/test split
+# Split
 print("🔀 Splitting data...")
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# 4. Train model
+# Train
 print("🧠 Training model...")
 model = RandomForestClassifier(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 
-# 5. Evaluate model
+# Evaluate
 print("📊 Classification Report:")
 print(classification_report(y_test, model.predict(X_test)))
 
-# 6. Save model
-model_filename = "sklearn_model.pkl"
-joblib.dump(model, model_filename)
-print(f"✅ Model saved as {model_filename}")
+# Save
+joblib.dump(model, "sklearn_model.pkl")
+print("✅ Model saved as sklearn_model.pkl")
