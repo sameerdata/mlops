@@ -1,0 +1,20 @@
+# Ignore virtual environments
+venv/
+.env/
+__pycache__/
+
+# Ignore Git
+.git/
+.gitignore
+
+# Ignore logs
+*.log
+
+# Ignore model artifacts
+*.tar.gz
+*.pkl
+*.joblib
+
+# Ignore compiled files
+*.pyc
+*.ipynb_checkpoints
