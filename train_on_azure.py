@@ -21,13 +21,17 @@ else:
 # Define environment
 env = Environment.from_pip_requirements(name='ml-env', file_path='src/requirements.txt')
 
+# Download dataset to compute target and pass as argument
+csv_path = dataset.download(target_path='src', overwrite=True)[0]
+
 # Script run config
 src = ScriptRunConfig(
-                      source_directory='src',
-                      script='train.py',
-                      arguments=[],
-                      compute_target=compute_target,
-                      environment=env)
+    source_directory='src',
+    script='train.py',
+    arguments=['--data_path', 'customer_churn_100.csv'],  # just the filename
+    compute_target=compute_target,
+    environment=env
+)
 
 # Submit experiment
 experiment = Experiment(workspace=ws, name='churn-training')
