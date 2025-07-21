@@ -28,7 +28,7 @@ print("📊 Classification Report:")
 print(classification_report(y_test, model.predict(X_test)))
 
 # 5. Save model for SageMaker
-model_filename = "sklearn_model.pkl"
+model_filename = "src/sklearn_model.pkl"
 joblib.dump(model, model_filename)
 print(f"✅ Model saved as {model_filename}")
 
