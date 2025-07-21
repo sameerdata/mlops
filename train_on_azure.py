@@ -5,7 +5,7 @@ import os
 # Load workspace
 ws = Workspace.from_config()
 
-# Load dataset
+# Load dataset (TabularDataset)
 dataset = Dataset.get_by_name(ws, 'customer_churn_dataset')
 
 # Create/attach compute cluster
@@ -18,20 +18,20 @@ else:
     compute_target = ComputeTarget.create(ws, cluster_name, compute_config)
     compute_target.wait_for_completion(show_output=True)
 
-# Define environment
+# Define environment from requirements.txt
 env = Environment.from_pip_requirements(name='ml-env', file_path='src/requirements.txt')
 
-# Download dataset to compute target and pass as argument
+# Convert dataset to DataFrame and save to CSV locally
+print("📦 Converting Azure ML dataset to CSV file...")
 df = dataset.to_pandas_dataframe()
 csv_path = os.path.join('src', 'customer_churn_100.csv')
 df.to_csv(csv_path, index=False)
 
-
-# Script run config
+# Create ScriptRunConfig
 src = ScriptRunConfig(
     source_directory='src',
     script='train.py',
-    arguments=['--data_path', 'customer_churn_100.csv'],  # just the filename
+    arguments=['--data_path', 'customer_churn_100.csv'],  # passed to train.py
     compute_target=compute_target,
     environment=env
 )
