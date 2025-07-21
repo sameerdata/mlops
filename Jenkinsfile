@@ -49,6 +49,14 @@ pipeline {
                 '''
             }
         }
+     stage('Clean Existing AzureML Environment') {
+    steps {
+        sh '''#!/bin/bash
+            source venv/bin/activate
+            python clean_environment.py
+        '''
+    }
+}
 
         stage('Train Model on Azure') {
             steps {
