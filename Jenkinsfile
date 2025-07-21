@@ -58,6 +58,15 @@ pipeline {
                 '''
             }
         }
+
+        stage('Deploy Model to ACI') {
+            steps {
+                sh '''#!/bin/bash
+                    source venv/bin/activate
+                    python deploy_model.py
+                '''
+            }
+        }
     }
 
     post {
