@@ -1,4 +1,5 @@
 import argparse
+import os
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
@@ -35,6 +36,9 @@ model.fit(X_train, y_train)
 print("📊 Classification Report:")
 print(classification_report(y_test, model.predict(X_test)))
 
-# Save
-joblib.dump(model, "sklearn_model.pkl")
-print("✅ Model saved as sklearn_model.pkl")
+# Save to AzureML outputs directory
+output_dir = os.getenv("AZUREML_OUTPUT_DIR", "outputs")
+os.makedirs(output_dir, exist_ok=True)
+model_path = os.path.join(output_dir, "sklearn_model.pkl")
+joblib.dump(model, model_path)
+print(f"✅ Model saved to {model_path}")
