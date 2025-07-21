@@ -21,13 +21,13 @@ else:
 # Define environment
 env = Environment.from_pip_requirements(name='ml-env', file_path='src/requirements.txt')
 
-# Convert dataset to DataFrame and save as CSV
+# Convert dataset to CSV for use in training
 print("📦 Converting Azure ML dataset to CSV file...")
 df = dataset.to_pandas_dataframe()
 csv_path = os.path.join('src', 'customer_churn_100.csv')
 df.to_csv(csv_path, index=False)
 
-# Configure the training job
+# Configure training script
 src = ScriptRunConfig(
     source_directory='src',
     script='train.py',
@@ -41,13 +41,22 @@ experiment = Experiment(workspace=ws, name='churn-training')
 run = experiment.submit(src)
 run.wait_for_completion(show_output=True)
 
-# Register the trained model
-print("📦 Registering trained model...")
-model_path = os.path.join('src', 'sklearn_model.pkl')  # path should match train.py output
-if os.path.exists(model_path):
+# Download model from outputs
+print("📥 Downloading model from AzureML run outputs...")
+download_path = "src/sklearn_model.pkl"
+try:
+    run.download_file(name="outputs/sklearn_model.pkl", output_file_path=download_path)
+    print(f"✅ Model downloaded to: {download_path}")
+except Exception as e:
+    print(f"❌ Failed to download model file: {e}")
+    download_path = None
+
+# Register model
+if download_path and os.path.exists(download_path):
+    print("📦 Registering trained model...")
     registered_model = Model.register(
         workspace=ws,
-        model_path=model_path,
+        model_path=download_path,
         model_name="churn_model"
     )
     print(f"✅ Model registered: {registered_model.name} (v{registered_model.version})")
