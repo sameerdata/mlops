@@ -22,7 +22,10 @@ else:
 env = Environment.from_pip_requirements(name='ml-env', file_path='src/requirements.txt')
 
 # Download dataset to compute target and pass as argument
-csv_path = dataset.download(target_path='src', overwrite=True)[0]
+df = dataset.to_pandas_dataframe()
+csv_path = os.path.join('src', 'customer_churn_100.csv')
+df.to_csv(csv_path, index=False)
+
 
 # Script run config
 src = ScriptRunConfig(
